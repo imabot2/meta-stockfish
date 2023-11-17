@@ -60,6 +60,8 @@ export default class Stockfish {
     this.engine.stdin.write('setoption name MultiPV value 250\n');
     if (options.thread != undefined) this.engine.stdin.write(`setoption name Threads value ${options.thread}\n`);
     if (options.hash != undefined) this.engine.stdin.write(`setoption name Hash value ${options.hash}\n`);
+    this.engine.stdin.write(`setoption name UCI_ShowWDL value true\n`);
+    
 
     // Set the verbose option
     this.verbose = options.verbose ?? false;
@@ -125,8 +127,8 @@ export default class Stockfish {
         let array = Object.entries(this.moveList);
         array.sort((a, b) => {
           // Compare 2 moves
-          if (a[1] < b[1]) return -1;
-          if (a[1] > b[1]) return 1;
+          if (a[1][0] < b[1][0]) return -1;
+          if (a[1][0] > b[1][0]) return 1;
           return 0;
         })
 
@@ -209,7 +211,7 @@ export default class Stockfish {
       if (words[0] == 'bestmove') this.eventDone.emit('get-moves-list-done');
 
       // If the line contains the best position, store the score in moves list
-      if (words[0] == 'info' && words[1] == 'depth' && words[21] !== undefined) {
+      if (words[0] == 'info' && words[1] == 'depth' && words[25] !== undefined) {
 
         // Display depth in the console
         const depth = parseInt(words[2])
@@ -218,9 +220,8 @@ export default class Stockfish {
           console.info('Current depth:', this.maxDepth);
         }
 
-        if (words[21] == 'g2') console.log('bug', line);
         // Add the score in the moves list
-        this.moveList[words[21]] = parseInt(words[9]);
+        this.moveList[words[25]] = [ parseInt(words[9]), parseInt(words[11]), parseInt(words[12]), parseInt(words[13]) ];
       }
     })
   }
